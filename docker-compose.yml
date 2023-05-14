@@ -1,0 +1,73 @@
+version: '3'
+
+services:
+  mysql:
+    container_name: mysql_ddd2
+    image: 'mysql'
+    command: '--default-authentication-plugin=mysql_native_password'
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_DATABASE: ddd2
+    ports:
+      - '3306:3306'
+    volumes:
+      - ./mysql:/var/lib/mysql
+    networks:
+      - ddd2
+
+  php:
+    container_name: php_ddd2
+    build:
+      context: ./app
+      dockerfile: ../php8.1/Dockerfile
+    ports:
+      - '9000:9000'
+    volumes:
+      - ./app:/var/www
+      - ./php8.1/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - ./php8.1/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
+      - ./php8.1/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+    depends_on:
+      - mysql
+    networks:
+      - ddd2
+
+  nginx:
+    container_name: nginx_ddd2
+    image: nginx:stable-alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ./app:/var/www
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+      - mysql
+    networks:
+      - ddd2
+
+  maildev:
+    image: maildev/maildev
+    container_name: maildev_ddd2
+    command: bin/maildev --web 80 --smtp 25 --hide-extensions STARTTLS
+    ports:
+      - "8081:80"
+    networks:
+      - ddd2
+
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: phpmyadmin_ddd2
+    depends_on:
+      - mysql
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 64M
+    networks:
+      - ddd2
+
+networks:
+  ddd2:

@@ -1,0 +1,15 @@
+controllers:
+    resource:
+        path: ../src/UserInterface/Controller/
+        namespace: App\UserInterface\Controller
+    type: attribute
+
+chat_collection_get:
+    path: /
+    methods: [GET]
+    controller: App\UserInterface\Controller\ChatController
+
+chat_collection_post:
+    path: /
+    methods: [POST]
+    controller: App\UserInterface\Controller\SendController
